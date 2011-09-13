@@ -9,42 +9,37 @@ Usage :
 Please Note : The library assumes that the Neo4j Services are running and active on the default port (localhost:7474) and default authentication.
 You may need to change the values at Neoapi.php to reflect your REST Server's settings.
 
-This shows you a sample controller implementation
+Blow is a sample implementation in your CI controller function
 
-class Yourcontroller extends CI_Controller {
+// INCLUDE THE LIBRARY
+$this->load->library('nodeapi');		
 
-	public function example() {
-		// INCLUDE THE LIBRARY
-		$this->load->library('nodeapi');		
-		
-		// CHECK IF NEO4J SERVER IS ONLINE
-		if (!$this->neoapi->isServerOnline()){
-			echo 'Neo4js graph server is offline' ;
-			exit ;
-		}			
-		
-		// CREATE A NODE
-		$nodeA = $this->neoapi->request('db/data/node', array ('name' => 'manchester_united', 'type' => 'football_club')); 
-		
-		// CREATE ANOTHER NODE AND FORM A RELATIONSHIP
-		$nodeB = $this->neoapi->request('db/data/node', array ('name' => 'wayne_Rooney', 'type' => 'player'));
-		$this->neoapi->request ($nodeA['self'].'/relationships/', array ('to' => $nodeB['self'], 'type' => 'has_player'));
-		$this->neoapi->request ($nodeB['self'].'/relationships/', array ('to' => $nodeA['self'], 'type' => 'plays_for'));
-		
-		// CREATE AN INDEX
-		$index = $this->neoapi->request('db/data/index/node/', array ('name' => 'football_clubs')); 		
-		$indexTemplate = $index['template'];
+// CHECK IF NEO4J SERVER IS ONLINE
+if (!$this->neoapi->isServerOnline()){
+	echo 'Neo4js graph server is offline' ;
+	exit ;
+}			
 
-		// INDEX THE 'name' FIELD OF NODE
-		$nameIndex = str_replace('{key}', 'name', $indexTemplate);
-		$nameIndex = str_replace('{value}', 'manchester_united', $nameIndex);
+// CREATE A NODE
+$nodeA = $this->neoapi->request('db/data/node', array ('name' => 'manchester_united', 'type' => 'football_club')); 
 
-		$this->neoapi->request($nameIndex, $nodeA['self']);
-		
-		// DELETE A NODE
-		$this->neoapi->delete('db/data/node/'.$this->neoapi->getNodeId($nodeA));
-		
-		// BASIC NODE TRAVERSAL : GET NODES RELATED TO A NODE
-		$relatedNodes = $this->neoapi->request($nodeA['self'].'/relationships/out/has_player');
-	}
-}	
+// CREATE ANOTHER NODE AND FORM A RELATIONSHIP
+$nodeB = $this->neoapi->request('db/data/node', array ('name' => 'wayne_Rooney', 'type' => 'player'));
+$this->neoapi->request ($nodeA['self'].'/relationships/', array ('to' => $nodeB['self'], 'type' => 'has_player'));
+$this->neoapi->request ($nodeB['self'].'/relationships/', array ('to' => $nodeA['self'], 'type' => 'plays_for'));
+
+// CREATE AN INDEX
+$index = $this->neoapi->request('db/data/index/node/', array ('name' => 'football_clubs')); 		
+$indexTemplate = $index['template'];
+
+// INDEX THE 'name' FIELD OF NODE
+$nameIndex = str_replace('{key}', 'name', $indexTemplate);
+$nameIndex = str_replace('{value}', 'manchester_united', $nameIndex);
+
+$this->neoapi->request($nameIndex, $nodeA['self']);
+
+// DELETE A NODE
+$this->neoapi->delete('db/data/node/'.$this->neoapi->getNodeId($nodeA));
+
+// BASIC NODE TRAVERSAL : GET NODES RELATED TO A NODE
+$relatedNodes = $this->neoapi->request($nodeA['self'].'/relationships/out/has_player');
