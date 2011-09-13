@@ -1,0 +1,50 @@
+This is a Basic CodeIgniter Library for the Neo4j Graph Database's REST server. Requesting contributions towards developing this library. The Wrapper Helps you communicate with the Neo4j REST Server. You can request for the results in JSON or a php Array. The Best way to Implement this would be to keep REST Server documentation as reference and mould the examples below to get what you need done.
+
+Refer Documentation at : http://components.neo4j.org/neo4j-server/snapshot/rest.html
+
+Installation :
+Copy Neoapi.php inside your /htdocs/<your-ci-project>/application/libraries Folder
+
+Usage :
+Please Note : The library assumes that the Neo4j Services are running and active on the default port (localhost:7474) and default authentication.
+You may need to change the values at Neoapi.php to reflect your REST Server's settings.
+
+This shows you a sample controller implementation
+
+class Yourcontroller extends CI_Controller {
+
+	public function example() {
+		// INCLUDE THE LIBRARY
+		$this->load->library('nodeapi');		
+		
+		// CHECK IF NEO4J SERVER IS ONLINE
+		if (!$this->neoapi->isServerOnline()){
+			echo 'Neo4js graph server is offline' ;
+			exit ;
+		}			
+		
+		// CREATE A NODE
+		$nodeA = $this->neoapi->request('db/data/node', array ('name' => 'manchester_united', 'type' => 'football_club')); 
+		
+		// CREATE ANOTHER NODE AND FORM A RELATIONSHIP
+		$nodeB = $this->neoapi->request('db/data/node', array ('name' => 'wayne_Rooney', 'type' => 'player'));
+		$this->neoapi->request ($nodeA['self'].'/relationships/', array ('to' => $nodeB['self'], 'type' => 'has_player'));
+		$this->neoapi->request ($nodeB['self'].'/relationships/', array ('to' => $nodeA['self'], 'type' => 'plays_for'));
+		
+		// CREATE AN INDEX
+		$index = $this->neoapi->request('db/data/index/node/', array ('name' => 'football_clubs')); 		
+		$indexTemplate = $index['template'];
+
+		// INDEX THE 'name' FIELD OF NODE
+		$nameIndex = str_replace('{key}', 'name', $indexTemplate);
+		$nameIndex = str_replace('{value}', 'manchester_united', $nameIndex);
+
+		$this->neoapi->request($nameIndex, $nodeA['self']);
+		
+		// DELETE A NODE
+		$this->neoapi->delete('db/data/node/'.$this->neoapi->getNodeId($nodeA));
+		
+		// BASIC NODE TRAVERSAL : GET NODES RELATED TO A NODE
+		$relatedNodes = $this->neoapi->request($nodeA['self'].'/relationships/out/has_player');
+	}
+}	
